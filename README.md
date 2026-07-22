@@ -7,10 +7,12 @@ Reproducibility repository for the **Section 6 (raw-data) analysis** of the pape
 > ACM RecSys 2026).
 
 It reproduces the paper's Section 6 finding that, in KuaiRand, the diversity–retention
-relationship is **heterogeneous across diversity dimensions**: within users, higher
-*topic* (tag) diversity predicts *slower* return, while higher *format* (video-/music-type)
-diversity predicts *faster* return. It includes the session-length confound check and
-the within-user analysis by dimension.
+association is **near-null once user activity is controlled**. Naive within-user
+correlations look strong and even change sign across diversity metrics (tag vs.
+video-/music-type entropy), but that structure is a **session-length confound**:
+adjusting for it collapses all three metrics to a weak, uniform faster-return signal
+(*r* ≈ −0.02 to −0.03). It includes the confound check and the raw-vs-length-adjusted
+within-user analysis.
 
 ## Contents
 
@@ -46,12 +48,13 @@ Section 6.3  Quartile analysis
   (0.625, 0.75]     55,872   mean_gap 2.811   return<=1d 62.7%
   (0.75, 1.0]      115,501   mean_gap 2.828   return<=1d 57.4%
 
-Section 6.4  Within-user analysis by diversity dimension (min 5 sessions)
-  metric                 users   mean_r %pos(slow) %neg(fast)       t
-  tag_unique_ratio      20,018  +0.1360      66.3%      32.4%    53.1 ***
-  video_type_entropy    11,536  -0.1031      25.4%      73.3%   -38.0 ***
-  music_type_entropy    19,585  -0.0638      40.3%      58.0%   -24.9 ***
-  -> Sign flips by dimension: topic (tag) slower, format (video/music) faster.
+Section 6.4  Within-user analysis: raw vs length-adjusted (min 5 sessions)
+  metric                 users    raw_r    adj_r   adj_t
+  tag_unique_ratio      20,018  +0.1360  -0.0353   -12.1
+  video_type_entropy    11,536  -0.1031  -0.0214    -7.5
+  music_type_entropy    19,585  -0.0638  -0.0211    -7.6
+  -> Raw signs disagree (a session-length confound); once length is
+     controlled, all three collapse to a weak, uniform faster-return signal.
 ```
 
 ## Regenerating the CSV from raw KuaiRand-Pure (optional)

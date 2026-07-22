@@ -266,29 +266,40 @@ def quantile_analysis(sessions):
 
 def within_user_analysis(sessions, min_sessions=5):
     print("\n" + "=" * 60)
-    print(f"Within-user correlation by diversity dimension (min_sessions={min_sessions})")
+    print(f"Within-user analysis: raw vs length-adjusted (min_sessions={min_sessions})")
     print("=" * 60)
-    print("  (removes between-user fixed effects; negative r = diversity -> faster return)\n")
+    print("  (negative r = diversity -> faster return)")
+    print("  raw_r = mean within-user Spearman; adj_r = partial corr controlling session_len\n")
+
+    def partial_corr(x, y, z):
+        def resid(a, b):
+            slope = np.cov(a, b, ddof=0)[0, 1] / np.var(b)
+            return a - slope * b
+        return stats.pearsonr(resid(x, z), resid(y, z))[0]
 
     div_metrics = ['tag_unique_ratio', 'video_type_entropy', 'music_type_entropy']
-    print(f"  {'metric':<20}{'users':>8}{'mean_r':>9}{'%pos(slow)':>11}"
-          f"{'%neg(fast)':>11}{'t':>8}")
-    print("  " + "-" * 65)
+    print(f"  {'metric':<20}{'users':>8}{'raw_r':>9}{'adj_r':>9}{'adj_t':>8}")
+    print("  " + "-" * 54)
     for metric in div_metrics:
-        user_corrs = []
+        raw, adj = [], []
         for uid, grp in sessions.groupby('user_id'):
             if len(grp) < min_sessions:
                 continue
-            r, p = stats.spearmanr(grp[metric], grp['return_gap'])
+            r, _ = stats.spearmanr(grp[metric], grp['return_gap'])
             if not np.isnan(r):
-                user_corrs.append(r)
-        user_corrs = np.array(user_corrs)
-        t, p = stats.ttest_1samp(user_corrs, 0)
-        sig = '***' if p < 0.001 else ('**' if p < 0.01 else ('*' if p < 0.05 else 'ns'))
-        print(f"  {metric:<20}{len(user_corrs):>8,}{user_corrs.mean():>+9.4f}"
-              f"{(user_corrs > 0).mean()*100:>10.1f}%{(user_corrs < 0).mean()*100:>10.1f}%"
-              f"{t:>8.1f} {sig}")
-    print("\n  -> Sign flips by dimension: topic (tag) slower, format (video/music) faster.")
+                raw.append(r)
+            x = grp[metric].values.astype(float)
+            y = grp['return_gap'].values.astype(float)
+            z = grp['session_len'].values.astype(float)
+            if x.var() > 1e-9 and y.var() > 1e-9 and z.var() > 1e-9:
+                pr = partial_corr(x, y, z)
+                if np.isfinite(pr):
+                    adj.append(pr)
+        raw, adj = np.array(raw), np.array(adj)
+        t, _ = stats.ttest_1samp(adj, 0)
+        print(f"  {metric:<20}{len(raw):>8,}{raw.mean():>+9.4f}{adj.mean():>+9.4f}{t:>8.1f}")
+    print("\n  -> Raw signs disagree (session-length confound); once length is controlled,")
+    print("     all three collapse to a weak, uniform faster-return signal.")
 
 
 # ---------------------------------------------------------------------------

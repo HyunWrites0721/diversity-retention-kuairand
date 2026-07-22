@@ -32,9 +32,13 @@ def sig(p):
 
 
 def partial_corr(x, y, z):
-    """Pearson correlation between x and y, controlling for z (residual method)."""
+    """Pearson correlation between x and y, controlling for z (OLS-residual method).
+
+    Uses consistent (population) normalization for covariance and variance so the
+    slope is unbiased even for the small per-user samples in the within-user analysis.
+    """
     def residual(a, b):
-        slope = np.cov(a, b)[0, 1] / np.var(b)
+        slope = np.cov(a, b, ddof=0)[0, 1] / np.var(b)
         return a - slope * b
     return stats.pearsonr(residual(x, z), residual(y, z))
 
@@ -80,27 +84,33 @@ def main():
 
     # ------------------------------------------------------------------ 6.4
     print("\n" + "=" * 64)
-    print("Section 6.4  Within-user analysis by diversity dimension (min 5 sessions)")
+    print("Section 6.4  Within-user analysis: raw vs length-adjusted (min 5 sessions)")
     print("=" * 64)
-    print("  Negative r = diversity associated with faster return.\n")
-    print(f"  {'metric':<20}{'users':>8}{'mean_r':>9}{'%pos(slow)':>11}"
-          f"{'%neg(fast)':>11}{'t':>8}")
-    print("  " + "-" * 65)
+    print("  Negative r = diversity associated with faster return.")
+    print("  raw_r     = mean within-user Spearman(metric, return_gap)")
+    print("  adj_r     = mean within-user partial corr, controlling session_len\n")
+    print(f"  {'metric':<20}{'users':>8}{'raw_r':>9}{'adj_r':>9}{'adj_t':>8}")
+    print("  " + "-" * 54)
     for m in DIV_METRICS:
-        corrs = []
+        raw, adj = [], []
         for _, grp in df.groupby("user_id"):
             if len(grp) < 5:
                 continue
             r, _ = stats.spearmanr(grp[m], grp["return_gap"])
             if not np.isnan(r):
-                corrs.append(r)
-        corrs = np.array(corrs)
-        t, p = stats.ttest_1samp(corrs, 0)
-        print(f"  {m:<20}{len(corrs):>8,}{corrs.mean():>+9.4f}"
-              f"{(corrs > 0).mean() * 100:>10.1f}%{(corrs < 0).mean() * 100:>10.1f}%"
-              f"{t:>8.1f} {sig(p)}")
-    print("\n  -> Sign flips by dimension: topic (tag) slower, format (video/music) "
-          "faster.")
+                raw.append(r)
+            x = grp[m].values.astype(float)
+            y = grp["return_gap"].values.astype(float)
+            z = grp["session_len"].values.astype(float)
+            if x.var() > 1e-9 and y.var() > 1e-9 and z.var() > 1e-9:
+                pr = partial_corr(x, y, z)[0]
+                if np.isfinite(pr):
+                    adj.append(pr)
+        raw, adj = np.array(raw), np.array(adj)
+        t, _ = stats.ttest_1samp(adj, 0)
+        print(f"  {m:<20}{len(raw):>8,}{raw.mean():>+9.4f}{adj.mean():>+9.4f}{t:>8.1f}")
+    print("\n  -> Raw signs disagree (a session-length confound); once length is")
+    print("     controlled, all three collapse to a weak, uniform faster-return signal.")
 
 
 if __name__ == "__main__":
