@@ -80,23 +80,27 @@ def main():
 
     # ------------------------------------------------------------------ 6.4
     print("\n" + "=" * 64)
-    print("Section 6.4  Within-user analysis (min 5 sessions/user)")
+    print("Section 6.4  Within-user analysis by diversity dimension (min 5 sessions)")
     print("=" * 64)
-    corrs = []
-    for _, grp in df.groupby("user_id"):
-        if len(grp) < 5:
-            continue
-        r, _ = stats.spearmanr(grp["tag_unique_ratio"], grp["return_gap"])
-        if not np.isnan(r):
-            corrs.append(r)
-    corrs = np.array(corrs)
-    t, p = stats.ttest_1samp(corrs, 0)
-    print(f"  users analyzed              : {len(corrs):,}")
-    print(f"  mean within-user r          : {corrs.mean():+.4f} {sig(p)}")
-    print(f"  users with r > 0 (slower)   : {(corrs > 0).mean() * 100:.1f}%")
-    print(f"  users with r < 0 (faster)   : {(corrs < 0).mean() * 100:.1f}%")
-    print(f"  users with r = 0            : {(corrs == 0).mean() * 100:.1f}%")
-    print(f"  one-sample t-test (mu=0)    : t={t:.3f}  p={p:.3e}  {sig(p)}")
+    print("  Negative r = diversity associated with faster return.\n")
+    print(f"  {'metric':<20}{'users':>8}{'mean_r':>9}{'%pos(slow)':>11}"
+          f"{'%neg(fast)':>11}{'t':>8}")
+    print("  " + "-" * 65)
+    for m in DIV_METRICS:
+        corrs = []
+        for _, grp in df.groupby("user_id"):
+            if len(grp) < 5:
+                continue
+            r, _ = stats.spearmanr(grp[m], grp["return_gap"])
+            if not np.isnan(r):
+                corrs.append(r)
+        corrs = np.array(corrs)
+        t, p = stats.ttest_1samp(corrs, 0)
+        print(f"  {m:<20}{len(corrs):>8,}{corrs.mean():>+9.4f}"
+              f"{(corrs > 0).mean() * 100:>10.1f}%{(corrs < 0).mean() * 100:>10.1f}%"
+              f"{t:>8.1f} {sig(p)}")
+    print("\n  -> Sign flips by dimension: topic (tag) slower, format (video/music) "
+          "faster.")
 
 
 if __name__ == "__main__":

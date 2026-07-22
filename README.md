@@ -6,10 +6,11 @@ Reproducibility repository for the **Section 6 (raw-data) analysis** of the pape
 > with Failure Analysis of RL-based Diversity Control.* FRAME'26 (co-located with
 > ACM RecSys 2026).
 
-It contains everything needed to reproduce the paper's claim that, in KuaiRand,
-higher session diversity is **not** associated with better long-term retention —
-including the session-length confound that reverses the naive correlation and the
-within-user analysis.
+It reproduces the paper's Section 6 finding that, in KuaiRand, the diversity–retention
+relationship is **heterogeneous across diversity dimensions**: within users, higher
+*topic* (tag) diversity predicts *slower* return, while higher *format* (video-/music-type)
+diversity predicts *faster* return. It includes the session-length confound check and
+the within-user analysis by dimension.
 
 ## Contents
 
@@ -45,12 +46,12 @@ Section 6.3  Quartile analysis
   (0.625, 0.75]     55,872   mean_gap 2.811   return<=1d 62.7%
   (0.75, 1.0]      115,501   mean_gap 2.828   return<=1d 57.4%
 
-Section 6.4  Within-user analysis (min 5 sessions/user)
-  users analyzed            : 20,018
-  mean within-user r        : +0.1360 ***
-  users with r > 0 (slower) : 66.3%
-  users with r < 0 (faster) : 32.4%
-  one-sample t-test (mu=0)  : t=53.149  p~0  ***
+Section 6.4  Within-user analysis by diversity dimension (min 5 sessions)
+  metric                 users   mean_r %pos(slow) %neg(fast)       t
+  tag_unique_ratio      20,018  +0.1360      66.3%      32.4%    53.1 ***
+  video_type_entropy    11,536  -0.1031      25.4%      73.3%   -38.0 ***
+  music_type_entropy    19,585  -0.0638      40.3%      58.0%   -24.9 ***
+  -> Sign flips by dimension: topic (tag) slower, format (video/music) faster.
 ```
 
 ## Regenerating the CSV from raw KuaiRand-Pure (optional)
