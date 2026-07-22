@@ -60,8 +60,14 @@ Section 6.4  Within-user analysis by diversity dimension (min 5 sessions)
 was produced. It reads the raw KuaiRand-Pure logs
 (`log_standard_*.csv`, `log_random_*.csv`, `video_features_basic_pure.csv`), so to
 run it you must (1) download KuaiRand-Pure from <https://kuairand.com/> and
-(2) edit the `DATA_DIR` path near the top of the script to point at your local
-copy. The shipped CSV lets you skip this step for the analysis in `reproduce.py`.
+(2) point the script at your local copy of its `data/` directory via the
+`KUAIRAND_DIR` environment variable, e.g.:
+
+```bash
+KUAIRAND_DIR=/path/to/KuaiRand-Pure/data python diversity_retention_signal.py
+```
+
+The shipped CSV lets you skip this step for the analysis in `reproduce.py`.
 
 ## Data source and license
 

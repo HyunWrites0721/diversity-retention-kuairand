@@ -26,8 +26,11 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-DATA_DIR = '/home/data/KuaiSim/dataset/kuairand/KuaiRand-Pure/data'
-OUT_DIR  = '/home/data/LTV/analysis'
+# Point DATA_DIR at your local copy of KuaiRand-Pure's `data/` directory
+# (download from https://kuairand.com/). Override without editing the file via
+# the KUAIRAND_DIR / OUT_DIR environment variables.
+DATA_DIR = os.environ.get('KUAIRAND_DIR', 'KuaiRand-Pure/data')
+OUT_DIR  = os.environ.get('OUT_DIR', '.')
 os.makedirs(OUT_DIR, exist_ok=True)
 
 
@@ -263,37 +266,29 @@ def quantile_analysis(sessions):
 
 def within_user_analysis(sessions, min_sessions=5):
     print("\n" + "=" * 60)
-    print(f"Within-user correlation (per-user diversity-gap relationship, min_sessions={min_sessions})")
+    print(f"Within-user correlation by diversity dimension (min_sessions={min_sessions})")
     print("=" * 60)
-    print("  (removes between-user fixed effects to measure the pure effect of diversity)")
+    print("  (removes between-user fixed effects; negative r = diversity -> faster return)\n")
 
-    user_corrs = []
-    for uid, grp in sessions.groupby('user_id'):
-        if len(grp) < min_sessions:
-            continue
-        r, p = stats.spearmanr(grp['tag_unique_ratio'], grp['return_gap'])
-        if not np.isnan(r):
-            user_corrs.append(r)
-
-    user_corrs = np.array(user_corrs)
-    print(f"\n  users analyzed : {len(user_corrs):,}")
-    print(f"  within-user r  : mean={user_corrs.mean():+.4f}  median={np.median(user_corrs):+.4f}  std={user_corrs.std():.4f}")
-
-    # fraction of users with negative correlation (diversity up -> gap down = faster return)
-    neg_frac = (user_corrs < 0).mean()
-    pos_frac = (user_corrs > 0).mean()
-    print(f"  r<0 (diversity linked to faster return): {neg_frac*100:.1f}%")
-    print(f"  r>0 (diversity linked to slower return): {pos_frac*100:.1f}%")
-
-    # is the group mean significantly different from zero?
-    t, p = stats.ttest_1samp(user_corrs, 0)
-    sig = '***' if p < 0.001 else ('**' if p < 0.01 else ('*' if p < 0.05 else 'ns'))
-    print(f"  one-sample t-test (mu=0): t={t:.3f}  p={p:.4e}  {sig}")
-    if p < 0.05:
-        direction = "diversity up -> faster return" if user_corrs.mean() < 0 else "diversity up -> slower return"
-        print(f"  -> significant: {direction}")
-    else:
-        print(f"  -> not significant: no within-user diversity-retention relationship")
+    div_metrics = ['tag_unique_ratio', 'video_type_entropy', 'music_type_entropy']
+    print(f"  {'metric':<20}{'users':>8}{'mean_r':>9}{'%pos(slow)':>11}"
+          f"{'%neg(fast)':>11}{'t':>8}")
+    print("  " + "-" * 65)
+    for metric in div_metrics:
+        user_corrs = []
+        for uid, grp in sessions.groupby('user_id'):
+            if len(grp) < min_sessions:
+                continue
+            r, p = stats.spearmanr(grp[metric], grp['return_gap'])
+            if not np.isnan(r):
+                user_corrs.append(r)
+        user_corrs = np.array(user_corrs)
+        t, p = stats.ttest_1samp(user_corrs, 0)
+        sig = '***' if p < 0.001 else ('**' if p < 0.01 else ('*' if p < 0.05 else 'ns'))
+        print(f"  {metric:<20}{len(user_corrs):>8,}{user_corrs.mean():>+9.4f}"
+              f"{(user_corrs > 0).mean()*100:>10.1f}%{(user_corrs < 0).mean()*100:>10.1f}%"
+              f"{t:>8.1f} {sig}")
+    print("\n  -> Sign flips by dimension: topic (tag) slower, format (video/music) faster.")
 
 
 # ---------------------------------------------------------------------------
