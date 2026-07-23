@@ -18,10 +18,11 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-# A user whose sessions have constant diversity or constant return_gap yields an
-# undefined (NaN) within-user correlation; such users are dropped below, so the
-# accompanying warning is expected and silenced for clean output.
-warnings.filterwarnings("ignore", category=stats.ConstantInputWarning)
+# A user whose sessions have (near-)constant diversity or return_gap yields an
+# undefined/unstable within-user correlation; such users are handled below, so the
+# accompanying scipy warnings are expected and silenced for clean output.
+warnings.filterwarnings("ignore", message=".*input array is constant.*")
+warnings.filterwarnings("ignore", message=".*input array is nearly constant.*")
 
 CSV = sys.argv[1] if len(sys.argv) > 1 else "diversity_retention_results.csv"
 DIV_METRICS = ["tag_unique_ratio", "video_type_entropy", "music_type_entropy"]

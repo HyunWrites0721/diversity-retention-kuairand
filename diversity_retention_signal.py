@@ -22,9 +22,15 @@ Usage:
 
 import os
 import sys
+import warnings
 import numpy as np
 import pandas as pd
 from scipy import stats
+
+# (near-)constant per-user inputs in the within-user analysis emit expected scipy
+# warnings; silence them for clean output (the affected users are handled inline).
+warnings.filterwarnings("ignore", message=".*input array is constant.*")
+warnings.filterwarnings("ignore", message=".*input array is nearly constant.*")
 
 # Point DATA_DIR at your local copy of KuaiRand-Pure's `data/` directory
 # (download from https://kuairand.com/). Override without editing the file via
