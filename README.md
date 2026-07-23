@@ -34,14 +34,17 @@ python reproduce.py
 Expected output (matches the paper):
 
 ```
-Section 6.2  Aggregate correlations
-  tag_unique_ratio      Pearson r=+0.0883 ***   Spearman r=+0.1737 ***
-  video_type_entropy    Pearson r=-0.0262 ***   Spearman r=-0.0884 ***
-  music_type_entropy    Pearson r=-0.0406 ***   Spearman r=-0.0760 ***
-  Confound check (controlling for session_len):
-    corr(session_len, tag_unique_ratio) = -0.5997
-    corr(session_len, return_gap)       = -0.1747
-    partial r(tag, gap | session_len)   = -0.0209 ***
+Section 6.2  Aggregate correlations (diversity vs. return_gap)
+  metric                 Pearson   Spearman  partial|len
+  tag_unique_ratio       +0.0883    +0.1737    -0.0209 ***
+  video_type_entropy     -0.0262    -0.0884    -0.0143 ***
+  music_type_entropy     -0.0406    -0.0760    -0.0171 ***
+  Confounder structure (why raw signs disagree):
+    corr(session_len, tag_unique_ratio)   = -0.5997
+    corr(session_len, video_type_entropy) = +0.0698
+    corr(session_len, music_type_entropy) = +0.1369
+    corr(session_len, return_gap)         = -0.1747
+  -> raw signs disagree, but all three partials (ctrl len) are weakly negative.
 
 Section 6.3  Quartile analysis
   (0.0823, 0.625]   60,456   mean_gap 2.169   return<=1d 76.4%

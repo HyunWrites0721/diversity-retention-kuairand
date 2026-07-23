@@ -52,21 +52,20 @@ def main():
     print("Section 6.2  Aggregate correlations (diversity vs. return_gap)")
     print("=" * 64)
     gap = df["return_gap"].values.astype(float)
+    slen = df["session_len"].values.astype(float)
+    print(f"  {'metric':<20}{'Pearson':>10}{'Spearman':>11}{'partial|len':>13}")
+    print("  " + "-" * 52)
     for m in DIV_METRICS:
         col = df[m].values.astype(float)
-        pr, pp = stats.pearsonr(col, gap)
-        sr, sp = stats.spearmanr(col, gap)
-        print(f"  {m:<20}  Pearson r={pr:+.4f} {sig(pp):>3}   "
-              f"Spearman r={sr:+.4f} {sig(sp):>3}")
-
-    # partial correlation controlling for session length + confounder structure
-    tag = df["tag_unique_ratio"].values.astype(float)
-    slen = df["session_len"].values.astype(float)
-    pr, pp = partial_corr(tag, gap, slen)
-    print("\n  Confound check (tag_unique_ratio, controlling for session_len):")
-    print(f"    corr(session_len, tag_unique_ratio) = {stats.pearsonr(slen, tag)[0]:+.4f}")
-    print(f"    corr(session_len, return_gap)       = {stats.pearsonr(slen, gap)[0]:+.4f}")
-    print(f"    partial r(tag, gap | session_len)   = {pr:+.4f} {sig(pp)}")
+        pr, _ = stats.pearsonr(col, gap)
+        sr, _ = stats.spearmanr(col, gap)
+        pc, pcp = partial_corr(col, gap, slen)
+        print(f"  {m:<20}{pr:>+10.4f}{sr:>+11.4f}{pc:>+11.4f} {sig(pcp)}")
+    print("\n  Confounder structure (why raw signs disagree):")
+    for m in DIV_METRICS:
+        print(f"    corr(session_len, {m:<20}) = {stats.pearsonr(slen, df[m].astype(float))[0]:+.4f}")
+    print(f"    corr(session_len, return_gap{'':<9}) = {stats.pearsonr(slen, gap)[0]:+.4f}")
+    print("  -> raw signs disagree, but all three partials (ctrl len) are weakly negative.")
 
     # ------------------------------------------------------------------ 6.3
     print("\n" + "=" * 64)

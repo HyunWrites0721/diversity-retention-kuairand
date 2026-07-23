@@ -202,24 +202,24 @@ def correlation_analysis(sessions):
         print(f"    Pearson  r={pearson_r:+.4f}  p={pearson_p:.2e}  {sig_p}")
         print(f"    Spearman r={spearman_r:+.4f}  p={spearman_p:.2e}  {sig_s}")
 
-    # session-length correction: partial correlation controlling for session_len
-    print(f"\n  [partial correlation controlling for session_len - tag_unique_ratio]")
+    # session-length correction: partial correlation controlling for session_len (all metrics)
+    print(f"\n  [partial correlation controlling for session_len]")
     from scipy.stats import pearsonr
     def partial_corr(x, y, z):
-        """Partial correlation between x and y, controlling for z."""
+        """Partial correlation between x and y, controlling for z (ddof-consistent)."""
         def residual(a, b):
-            slope = np.cov(a, b)[0, 1] / np.var(b)
+            slope = np.cov(a, b, ddof=0)[0, 1] / np.var(b)
             return a - slope * b
-        rx = residual(x, z)
-        ry = residual(y, z)
-        return pearsonr(rx, ry)
+        return pearsonr(residual(x, z), residual(y, z))
 
-    col = sessions['tag_unique_ratio'].values.astype(float)
     gap = sessions['return_gap'].values.astype(float)
     slen = sessions['session_len'].values.astype(float)
-    pr, pp = partial_corr(col, gap, slen)
-    sig = '***' if pp < 0.001 else ('**' if pp < 0.01 else ('*' if pp < 0.05 else 'ns'))
-    print(f"    partial Pearson r={pr:+.4f}  p={pp:.2e}  {sig}")
+    for metric in div_metrics:
+        col = sessions[metric].values.astype(float)
+        pr, pp = partial_corr(col, gap, slen)
+        sig = '***' if pp < 0.001 else ('**' if pp < 0.01 else ('*' if pp < 0.05 else 'ns'))
+        print(f"    {metric:<20} partial Pearson r={pr:+.4f}  {sig}"
+              f"   (corr with session_len = {pearsonr(slen, col)[0]:+.3f})")
 
     return results
 
