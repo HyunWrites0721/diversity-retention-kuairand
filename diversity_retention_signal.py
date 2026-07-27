@@ -231,39 +231,31 @@ def correlation_analysis(sessions):
 
 
 # ---------------------------------------------------------------------------
-# 5. Quartile comparison of return_gap
+# 5. Binned comparison of return_gap
 # ---------------------------------------------------------------------------
 
-def quantile_analysis(sessions):
+def binned_analysis(sessions):
     print("\n" + "=" * 60)
-    print("Return_gap by diversity quartile (tag_unique_ratio)")
+    print("Return_gap by diversity bin (tag_unique_ratio)")
     print("=" * 60)
 
+    # tag_unique_ratio is heavily tied at its maximum, so a quartile split
+    # collapses into three unequal bins; the actual cut points are reported.
     sessions = sessions.copy()
-    sessions['div_quartile'] = pd.qcut(
+    sessions['div_bin'] = pd.qcut(
         sessions['tag_unique_ratio'], q=4,
         duplicates='drop',
     )
 
-    print(f"\n  {'quartile':<12} {'n':>7}  {'mean_gap':>9}  {'median_gap':>11}  {'return<2d':>10}")
-    print("  " + "-" * 55)
-    for q, grp in sessions.groupby('div_quartile'):
+    print("\n  return<=1d = next-day return rate (fraction with return_gap <= 1).")
+    print(f"\n  {'bin':<20} {'n':>7}  {'mean_gap':>9}  {'median_gap':>11}  {'return<=1d':>11}")
+    print("  " + "-" * 63)
+    for b, grp in sessions.groupby('div_bin', observed=True):
         n       = len(grp)
         mean_g  = grp['return_gap'].mean()
         med_g   = grp['return_gap'].median()
-        ret2    = (grp['return_gap'] <= 1).mean() * 100
-        print(f"  {str(q):<12} {n:>7,}  {mean_g:>9.3f}  {med_g:>11.1f}  {ret2:>9.1f}%")
-
-    # Q1 vs Q4 t-test
-    q1 = sessions[sessions['div_quartile'] == 'Q1\n(low)']['return_gap']
-    q4 = sessions[sessions['div_quartile'] == 'Q4\n(high)']['return_gap']
-    t, p = stats.ttest_ind(q1, q4)
-    print(f"\n  Q1 vs Q4 t-test: t={t:.3f}  p={p:.4e}")
-    if p < 0.05:
-        direction = "lower (more diverse -> faster return)" if q4.mean() < q1.mean() else "higher (more diverse -> slower return)"
-        print(f"  -> significant difference. Q4 mean_gap is {direction} than Q1")
-    else:
-        print(f"  -> no significant difference (p>=0.05)")
+        ret1    = (grp['return_gap'] <= 1).mean() * 100
+        print(f"  {str(b):<20} {n:>7,}  {mean_g:>9.3f}  {med_g:>11.1f}  {ret1:>10.1f}%")
 
 
 # ---------------------------------------------------------------------------
@@ -318,7 +310,7 @@ def main():
     sessions = compute_session_diversity(log, vf)
     sessions = compute_return_gap(sessions)
     correlation_analysis(sessions)
-    quantile_analysis(sessions)
+    binned_analysis(sessions)
     within_user_analysis(sessions, min_sessions=5)
 
     # save results

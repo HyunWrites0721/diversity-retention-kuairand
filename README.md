@@ -11,7 +11,7 @@ association is **near-null once user activity is controlled**. Naive within-user
 correlations look strong and even change sign across diversity metrics (tag vs.
 video-/music-type entropy), but that structure is a **session-length confound**:
 adjusting for it collapses all three metrics to a weak, uniform faster-return signal
-(*r* ≈ −0.02 to −0.03). It includes the confound check and the raw-vs-length-adjusted
+(*r* between −0.02 and −0.035). It includes the confound check and the raw-vs-length-adjusted
 within-user analysis.
 
 ## Contents
@@ -46,10 +46,15 @@ Section 6.2  Aggregate correlations (diversity vs. return_gap)
     corr(session_len, return_gap)         = -0.1747
   -> raw signs disagree, but all three partials (ctrl len) are weakly negative.
 
-Section 6.3  Quartile analysis
-  (0.0823, 0.625]   60,456   mean_gap 2.169   return<=1d 76.4%
-  (0.625, 0.75]     55,872   mean_gap 2.811   return<=1d 62.7%
-  (0.75, 1.0]      115,501   mean_gap 2.828   return<=1d 57.4%
+Section 6.3  Binned analysis (tag_unique_ratio)
+  tag_unique_ratio is heavily tied at its maximum, so a quartile split
+  collapses into three unequal bins; the actual cut points are reported.
+  return<=1d = next-day return rate (fraction with return_gap <= 1).
+
+  bin                                 n  mean_gap  return<=1d
+  (0.0823, 0.625]                60,456     2.169       76.4%
+  (0.625, 0.75]                  55,872     2.811       62.7%
+  (0.75, 1.0]                   115,501     2.828       57.4%
 
 Section 6.4  Within-user analysis: raw vs length-adjusted (min 5 sessions)
   metric                 users    raw_r    adj_r   adj_t

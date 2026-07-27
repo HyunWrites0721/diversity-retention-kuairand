@@ -70,13 +70,16 @@ def main():
 
     # ------------------------------------------------------------------ 6.3
     print("\n" + "=" * 64)
-    print("Section 6.3  Quartile analysis (tag_unique_ratio)")
+    print("Section 6.3  Binned analysis (tag_unique_ratio)")
     print("=" * 64)
+    print("  tag_unique_ratio is heavily tied at its maximum, so a quartile split")
+    print("  collapses into three unequal bins; the actual cut points are reported.")
+    print("  return<=1d = next-day return rate (fraction with return_gap <= 1).\n")
     q = df.copy()
-    q["quartile"] = pd.qcut(q["tag_unique_ratio"], q=4, duplicates="drop")
+    q["bin"] = pd.qcut(q["tag_unique_ratio"], q=4, duplicates="drop")
     print(f"  {'bin':<28} {'n':>8}  {'mean_gap':>8}  {'return<=1d':>10}")
     print("  " + "-" * 58)
-    for b, grp in q.groupby("quartile", observed=True):
+    for b, grp in q.groupby("bin", observed=True):
         n = len(grp)
         mean_g = grp["return_gap"].mean()
         ret = (grp["return_gap"] <= 1).mean() * 100
