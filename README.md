@@ -1,10 +1,13 @@
-# Does Diversity Actually Improve Long-term Retention? — Raw-data Analysis
+# Does Diversity Actually Improve Long-Term Retention? — Raw-data Analysis
 
 Reproducibility repository for the **Section 6 (raw-data) analysis** of the paper:
 
-> *Does Diversity Actually Improve Long-term Retention? An Empirical Investigation
-> with Failure Analysis of RL-based Diversity Control.* FRAME'26 (co-located with
-> ACM RecSys 2026).
+> *Does Diversity Actually Improve Long-Term Retention? An Empirical Investigation
+> with Failure Analysis of RL-Based Diversity Control.* FRAME'26: Methodology First -
+> Rethinking Research Assessment in RecSys Workshop (co-located with ACM RecSys 2026),
+> September 28, 2026, Minneapolis, Minnesota, USA.
+>
+> The camera-ready version of the paper is included as [`paper.pdf`](paper.pdf).
 
 It reproduces the paper's Section 6 finding that, in KuaiRand, the diversity–retention
 association is **near-null once user activity is controlled**. Naive within-user
@@ -18,6 +21,7 @@ within-user analysis.
 
 | File | Description |
 |------|-------------|
+| `paper.pdf` | Camera-ready version of the paper (FRAME'26). **CC BY 4.0**, copyright by its authors. |
 | `diversity_retention_results.csv` | Derived table, one row per user–date session (session length, three diversity metrics, return gap). 231,829 sessions. **CC BY-SA 4.0** (see `ATTRIBUTION.md`). |
 | `reproduce.py` | Recomputes all Section 6 statistics **from the CSV alone** — no raw download needed. |
 | `diversity_retention_signal.py` | The original derivation script that builds the CSV from raw KuaiRand-Pure logs (documents provenance; see note below). |
@@ -86,6 +90,7 @@ The derived table is computed from **KuaiRand-Pure** (Gao et al., CIKM 2022),
 distributed under **CC BY-SA 4.0**. Under the ShareAlike term, the derived table
 here is released under the same license, with attribution — see `ATTRIBUTION.md`.
 The code in this repository is released under the MIT license (`LICENSE`).
+The paper (`paper.pdf`) is © 2026 its authors and released under CC BY 4.0.
 
 ## Citation
 
